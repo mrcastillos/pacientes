@@ -1,51 +1,52 @@
-<HTML>
+¡Claro! Aquí tienes un código HTML básico para crear una página con las características que mencionas: un título, un encabezado, un menú desplegable a la izquierda y una sección a la derecha para mostrar contenido.
 
-<HEAD>
+HTML
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mi Página con Menú Desplegable</title>
+    <style>
+        /* Estilos básicos para la disposición */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
 
-<TITLE>Un Titulo para el Browser de turno </TITLE>
+        header {
+            text-align: center;
+        }
 
-</HEAD>
+        nav {
+            float: left;
+            width: 20%;
+        }
 
-<BODY>
+        section {
+            float: right;
+            width: 75%;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Mi Página Web</h1>
+    </header>
 
-<!-- Aqui va todo lo chachi -->
+    <nav>
+        <h2>Menú</h2>
+        <select>
+            <option value="opcion1">Opción 1</option>
+            <option value="opcion2">Opción 2</option>
+            <option value="opcion3">Opción 3</option>
+        </select>   
 
-<H1>Otro t&iacute;tulo, esta vez m&aacute;s largo. </H1>
+    </nav>
 
-<P> <IMG SRC= "./felix.gif "ALIGN= "MIDDLE " ALT= "EL Gato Felix ">Hoola.
-
-<P>Esto es un parrafo con informacion
-
-super importante. Notese que las lineas salen pegadas aun dejando
-
-espacios, saltos de linea, etc. <BR> &#161 Si pongo esto
-
-si <STRONG>cambia </STRONG> de linea!
-
-<P>Otro parrafo, esto ya es un poco rollo.
-
-<H3>Pongamos un subtítulo<H3>
-
-<P>Por cierto, &#191 que paso con las <A HREF= "#pepe ">anclas</A>?
-
-<HR>
-
-<UL>
-
-<LI> Esto es una lista no ordenada.
-
-<LI> Las listas quedan mejor si tienen varios elementos.
-
-</UL>
-
-Me voy al <A HREF= "http://www.iac.es/home.html ">IAC</A>.
-
-<P>Vamos a crear un <EM>ancla </EM>, o lo que es lo mismo, un <A NAME="pepe">anchor.</A>
-
-.....................................................
-
-.....................................................
-
-</BODY>
-
-</HTML>
+    <section>
+        <h2>Contenido</h2>
+        <p>Aquí se mostrará el contenido correspondiente a la opción seleccionada en el menú.</p>
+    </section>
+</body>
+</html>
