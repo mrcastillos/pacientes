@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Formulario con Mapa</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    #map {
+      height: 400px;
+      margin-top: 15px;
+      border-radius: 8px;
+    }
+    form {
+      margin-bottom: 20px;
+    }
+    input {
+      margin: 5px 0;
+      padding: 8px;
+      width: 100%;
+      max-width: 400px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      padding: 10px 20px;
+      background: #0078d7;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button:hover {
+      background: #005a9e;
+    }
+    #resultado {
+      margin-top: 20px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      background: #f9f9f9;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Formulario con Ubicación en Mapa</h2>
+  <form id="formulario">
+    <label>Nombre:</label><br>
+    <input type="text" id="nombre" required><br>
+    <label>Teléfono:</label><br>
+    <input type="tel" id="telefono" required><br>
+    
+    <!-- Campos ocultos para coordenadas -->
+    <input type="hidden" id="latitud" name="latitud">
+    <input type="hidden" id="longitud" name="longitud">
+
+    <div id="map"></div>
+
+    <button type="submit">Enviar</button>
+  </form>
+
+  <div id="resultado"></div>
+
+  <script>
+    // Inicializar mapa en un punto por defecto (México)
+    var map = L.map('map').setView([19.4326, -99.1332], 12);
+
+    // Cargar mapa de OpenStreetMap
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    var marcador;
+
+    // Evento de clic en el mapa
+    map.on('click', function(e) {
+      var lat = e.latlng.lat.toFixed(6);
+      var lng = e.latlng.lng.toFixed(6);
+
+      // Guardar coordenadas en el formulario
+      document.getElementById('latitud').value = lat;
+      document.getElementById('longitud').value = lng;
+
+      // Colocar marcador
+      if (marcador) {
+        map.removeLayer(marcador);
+      }
+      marcador = L.marker([lat, lng]).addTo(map)
+        .bindPopup("Ubicación seleccionada:<br>Lat: " + lat + "<br>Lng: " + lng)
+        .openPopup();
+    });
+
+    // Manejar envío del formulario
+    document.getElementById('formulario').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      var nombre = document.getElementById('nombre').value;
+      var telefono = document.getElementById('telefono').value;
+      var lat = document.getElementById('latitud').value;
+      var lng = document.getElementById('longitud').value;
+
+      if (!lat || !lng) {
+        alert("Por favor selecciona una ubicación en el mapa.");
+        return;
+      }
+
+      document.getElementById('resultado').innerHTML = `
+        <h3>Datos Capturados:</h3>
+        <p><b>Nombre:</b> ${nombre}</p>
+        <p><b>Teléfono:</b> ${telefono}</p>
+        <p><b>Latitud:</b> ${lat}</p>
+        <p><b>Longitud:</b> ${lng}</p>
+      `;
+    });
+  </script>
+
+</body>
+</html>
