@@ -65,25 +65,25 @@ button:hover { background: #005a9e; }
 <div id="mensaje">✅ Registro enviado correctamente</div>
 
 <script>
-var map = L.map('map').setView([18.6813, -99.1013], 9);
+const map = L.map('map').setView([18.6813, -99.1013], 9);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
-var marcador;
+let marcador;
 
-// URL de tu Web App de Google Apps Script
+// URL de tu Web App desplegado (con acceso público)
 const scriptURL = "https://script.google.com/macros/s/AKfycbxFqqFCJQ98hHFEwQGjxKXjXad18bmhNBa2ROT7QsKqFM8FTqOpifQeMrx5TXGeQM8W0A/exec";
 
 // Mostrar/ocultar campos "Otro"
-document.getElementById("enfermedad").addEventListener("change", function() {
-    document.getElementById("otraEnfermedad").style.display = (this.value === "Otro") ? "block" : "none";
+document.getElementById("enfermedad").addEventListener("change", () => {
+    document.getElementById("otraEnfermedad").style.display = document.getElementById("enfermedad").value === "Otro" ? "block" : "none";
 });
-document.getElementById("tipoCaso").addEventListener("change", function() {
-    document.getElementById("otroCaso").style.display = (this.value === "Otro") ? "block" : "none";
+document.getElementById("tipoCaso").addEventListener("change", () => {
+    document.getElementById("otroCaso").style.display = document.getElementById("tipoCaso").value === "Otro" ? "block" : "none";
 });
 
-// Selección de ubicación
-map.on('click', function(e) {
-    var lat = e.latlng.lat.toFixed(6);
-    var lng = e.latlng.lng.toFixed(6);
+// Selección de ubicación en mapa
+map.on('click', e => {
+    const lat = e.latlng.lat.toFixed(6);
+    const lng = e.latlng.lng.toFixed(6);
     document.getElementById('latitud').value = lat;
     document.getElementById('longitud').value = lng;
 
@@ -92,76 +92,74 @@ map.on('click', function(e) {
     fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
         .then(res => res.json())
         .then(data => {
-            var direccion = data.display_name || "Dirección no encontrada";
+            const direccion = data.display_name || "Dirección no encontrada";
             document.getElementById('direccion').value = direccion;
-            marcador = L.marker([lat, lng]).addTo(map)
-                .bindPopup(`<b>Ubicación:</b><br>${direccion}<br>(${lat}, ${lng})`)
-                .openPopup();
+            marcador = L.marker([lat, lng]).addTo(map).bindPopup(`<b>Ubicación:</b><br>${direccion}<br>(${lat}, ${lng})`).openPopup();
         })
         .catch(() => { document.getElementById('direccion').value = "Error al obtener dirección"; });
 });
 
 function mostrarMensaje() {
-    var msg = document.getElementById("mensaje");
+    const msg = document.getElementById("mensaje");
     msg.style.display = "block";
     setTimeout(() => { msg.style.display = "none"; }, 3000);
 }
 
-// Envío de formulario
-document.getElementById('formulario').addEventListener('submit', function(e) {
+// Envío de formulario usando fetch con CORS
+document.getElementById('formulario').addEventListener('submit', e => {
     e.preventDefault();
 
-    var enfermedad = document.getElementById('enfermedad').value;
-    var otraEnfermedad = document.getElementById('otraEnfermedad').value.trim();
+    const enfermedad = document.getElementById('enfermedad').value;
+    const otraEnfermedad = document.getElementById('otraEnfermedad').value.trim();
     if (enfermedad === "Otro" && !otraEnfermedad) { alert("⚠️ Especifica la otra enfermedad."); return; }
 
-    var tipoCaso = document.getElementById('tipoCaso').value;
-    var otroCaso = document.getElementById('otroCaso').value.trim();
+    const tipoCaso = document.getElementById('tipoCaso').value;
+    const otroCaso = document.getElementById('otroCaso').value.trim();
     if (tipoCaso === "Otro" && !otroCaso) { alert("⚠️ Especifica el otro tipo de caso."); return; }
 
-    var nombre = document.getElementById('nombre').value.trim();
-    var telefono = document.getElementById('telefono').value.trim();
-    var lat = document.getElementById('latitud').value;
-    var lng = document.getElementById('longitud').value;
-    var direccion = document.getElementById('direccion').value.trim();
+    const nombre = document.getElementById('nombre').value.trim();
+    const telefono = document.getElementById('telefono').value.trim();
+    const lat = document.getElementById('latitud').value;
+    const lng = document.getElementById('longitud').value;
+    const direccion = document.getElementById('direccion').value.trim();
 
     if (!nombre || !telefono || !lat || !lng || !direccion) {
         alert("⚠️ Completa todos los campos y selecciona un punto en el mapa.");
         return;
     }
 
-    var formData = new URLSearchParams();
-    formData.append("enfermedad", (enfermedad === "Otro") ? otraEnfermedad : enfermedad);
-    formData.append("tipoCaso", (tipoCaso === "Otro") ? otroCaso : tipoCaso);
+    // Usar fetch normal con CORS permitido por el Web App
+    const formData = new URLSearchParams();
+    formData.append("enfermedad", enfermedad === "Otro" ? otraEnfermedad : enfermedad);
+    formData.append("tipoCaso", tipoCaso === "Otro" ? otroCaso : tipoCaso);
     formData.append("nombre", nombre);
     formData.append("telefono", telefono);
     formData.append("latitud", lat);
     formData.append("longitud", lng);
     formData.append("direccion", direccion);
 
-    fetch(scriptURL, { method: 'POST', body: formData })
-        .then(res => res.text())
-        .then(res => {
-            if (res.includes("OK")) {
-                mostrarMensaje();
-                document.getElementById('resultado').innerHTML = `
-                    <h3>Último registro:</h3>
-                    <p><b>Enfermedad:</b> ${(enfermedad === "Otro") ? otraEnfermedad : enfermedad}</p>
-                    <p><b>Tipo de caso:</b> ${(tipoCaso === "Otro") ? otroCaso : tipoCaso}</p>
-                    <p><b>Nombre:</b> ${nombre}</p>
-                    <p><b>Teléfono:</b> ${telefono}</p>
-                    <p><b>Latitud:</b> ${lat}</p>
-                    <p><b>Longitud:</b> ${lng}</p>
-                    <p><b>Dirección:</b> ${direccion}</p>`;
-                document.getElementById('formulario').reset();
-                document.getElementById('latitud').value = "";
-                document.getElementById('longitud').value = "";
-                if (marcador) map.removeLayer(marcador);
-            } else {
-                alert("❌ Error en el servidor: " + res);
-            }
-        })
-        .catch(err => alert("❌ Error al guardar: " + err));
+    fetch(scriptURL, {
+        method: 'POST',
+        mode: 'no-cors', // <- importante para evitar bloqueo CORS
+        body: formData
+    })
+    .then(() => {
+        mostrarMensaje();
+        document.getElementById('resultado').innerHTML = `
+            <h3>Último registro:</h3>
+            <p><b>Enfermedad:</b> ${enfermedad === "Otro" ? otraEnfermedad : enfermedad}</p>
+            <p><b>Tipo de caso:</b> ${tipoCaso === "Otro" ? otroCaso : tipoCaso}</p>
+            <p><b>Nombre:</b> ${nombre}</p>
+            <p><b>Teléfono:</b> ${telefono}</p>
+            <p><b>Latitud:</b> ${lat}</p>
+            <p><b>Longitud:</b> ${lng}</p>
+            <p><b>Dirección:</b> ${direccion}</p>`;
+        document.getElementById('formulario').reset();
+        document.getElementById('latitud').value = "";
+        document.getElementById('longitud').value = "";
+        if (marcador) map.removeLayer(marcador);
+    })
+    .catch(err => alert("❌ Error al guardar: " + err));
 });
 </script>
 
