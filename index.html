@@ -118,33 +118,32 @@
       formData.append("longitud", lng);
       formData.append("direccion", direccion);
 
-      fetch(scriptURL, { method: 'POST', body: formData })
-        .then(response => response.text())
-        .then(res => {
-          if (res.includes("OK")) {
-            // Mostrar mensaje de éxito
-            mostrarMensaje();
+      fetch(scriptURL, { 
+        method: 'POST', 
+        body: formData,
+        mode: 'no-cors'  // 👈 Esto evita el bloqueo CORS
+      })
+      .then(() => {
+          // Como usamos no-cors, no podemos leer respuesta,
+          // asumimos éxito y mostramos mensaje
+          mostrarMensaje();
 
-            // Mostrar datos enviados
-            document.getElementById('resultado').innerHTML = 
-              `<h3>Último registro enviado:</h3>
-               <p><b>Nombre:</b> ${nombre}</p>
-               <p><b>Teléfono:</b> ${telefono}</p>
-               <p><b>Latitud:</b> ${lat}</p>
-               <p><b>Longitud:</b> ${lng}</p>
-               <p><b>Coordenadas GIS:</b> ${lat},${lng}</p>
-               <p><b>Dirección:</b> ${direccion}</p>`;
+          document.getElementById('resultado').innerHTML = 
+            `<h3>Último registro enviado:</h3>
+             <p><b>Nombre:</b> ${nombre}</p>
+             <p><b>Teléfono:</b> ${telefono}</p>
+             <p><b>Latitud:</b> ${lat}</p>
+             <p><b>Longitud:</b> ${lng}</p>
+             <p><b>Coordenadas GIS:</b> ${lat},${lng}</p>
+             <p><b>Dirección:</b> ${direccion}</p>`;
 
-            // Limpiar formulario y mapa
-            document.getElementById('formulario').reset();
-            document.getElementById('latitud').value = "";
-            document.getElementById('longitud').value = "";
-            if (marcador) { map.removeLayer(marcador); }
-          } else {
-            alert("❌ Error en el servidor: " + res);
-          }
-        })
-        .catch(err => alert("❌ Error al guardar: " + err));
+          // Limpiar formulario y mapa
+          document.getElementById('formulario').reset();
+          document.getElementById('latitud').value = "";
+          document.getElementById('longitud').value = "";
+          if (marcador) { map.removeLayer(marcador); }
+      })
+      .catch(err => alert("❌ Error al guardar: " + err));
     });
   </script>
 
