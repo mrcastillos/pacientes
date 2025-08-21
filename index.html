@@ -2,42 +2,64 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Formulario con Mapa</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Georreferenciación de casos</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <style>
     body { 
       font-family: Arial, sans-serif; 
-      margin: 20px; 
-      display: flex; 
-      justify-content: center;
+      margin: 10px; 
+      padding: 0;
+      background: #f4f6f9;
     }
-    .contenedor {
-      width: 100%;
+    h2 {
+      text-align: center;
+      color: #0078d7;
+      margin-bottom: 15px;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
       max-width: 500px;
+      margin: auto;
+      padding: 15px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
-    input, textarea, button {
-      margin: 5px 0; 
-      padding: 10px; 
-      width: 100%; 
-      box-sizing: border-box;
+    label {
+      font-weight: bold;
+      margin-top: 5px;
+    }
+    input, select, textarea, button {
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      width: 100%;
     }
     textarea { resize: none; height: 60px; }
-    button { 
-      background: #0078d7; 
-      color: white; 
-      border: none; 
-      border-radius: 5px; 
-      cursor: pointer; 
-      font-size: 16px;
+    button {
+      background: #0078d7;
+      color: white;
+      border: none;
+      cursor: pointer;
     }
     button:hover { background: #005a9e; }
-    #resultado { 
+    #map { 
+      width: 100%; 
+      aspect-ratio: 1 / 1; /* Mantiene forma cuadrada */
+      border-radius: 8px; 
+      margin-top: 10px;
+    }
+    #resultado {
       margin-top: 20px; 
       padding: 15px; 
       border: 1px solid #ddd; 
       border-radius: 5px; 
-      background: #f9f9f9; 
+      background: #fff;
     }
     #mensaje {
       display: none;
@@ -52,66 +74,78 @@
       z-index: 9999;
       font-weight: bold;
     }
-
-    /* Mapa cuadrado y responsivo */
-    #map {
-      width: 100%;
-      aspect-ratio: 1 / 1; /* lo hace cuadrado automáticamente */
-      margin-top: 15px;
-      border-radius: 8px;
-    }
-
-    /* Compatibilidad para navegadores sin aspect-ratio */
-    @supports not (aspect-ratio: 1/1) {
-      #map {
-        height: 0;
-        padding-bottom: 100%; /* cuadrado */
-        position: relative;
-      }
-      #map > * {
-        position: absolute;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-      }
+    @media (max-width: 600px) {
+      form { padding: 10px; }
+      button { font-size: 14px; padding: 8px; }
     }
   </style>
 </head>
 <body>
 
-  <div class="contenedor">
-    <h2>Formulario con Ubicación en Mapa</h2>
-    <form id="formulario">
-      <label>Nombre:</label><br>
-      <input type="text" id="nombre" required><br>
-      <label>Teléfono:</label><br>
-      <input type="tel" id="telefono" required><br>
-      <label>Dirección:</label><br>
-      <textarea id="direccion" readonly required></textarea><br>
-      
-      <input type="hidden" id="latitud" name="latitud">
-      <input type="hidden" id="longitud" name="longitud">
+  <h2>Georreferenciación de casos</h2>
+  <form id="formulario">
+    
+    <!-- Tipo de enfermedad -->
+    <label>Tipo de enfermedad:</label>
+    <select id="enfermedad" required>
+      <option value="">-- Selecciona --</option>
+      <option value="Chagas">Chagas</option>
+      <option value="Dengue">Dengue</option>
+       <option value="Dengue">Paludismo</option>
+      <option value="Zoonosis">Zoonosis</option>
+      <option value="Otro">Otro</option>
+    </select>
+    <input type="text" id="otraEnfermedad" placeholder="Especificar otra enfermedad" style="display:none;">
 
-      <div id="map"></div>
+    <!-- Tipo de caso -->
+    <label>Tipo de caso:</label>
+    <select id="tipoCaso" required>
+      <option value="">-- Selecciona --</option>
+      <option value="Caso confirmado">Caso confirmado</option>
+      <option value="Caso probable">Caso probable</option>
+      <option value="Otro">Otro</option>
+    </select>
+    <input type="text" id="otroCaso" placeholder="Especificar otro tipo de caso" style="display:none;">
 
-      <button type="submit">Enviar</button>
-    </form>
+    <!-- Nombre y teléfono -->
+    <label>Nombre:</label>
+    <input type="text" id="nombre" required>
 
-    <div id="resultado"></div>
-  </div>
+    <label>Teléfono:</label>
+    <input type="tel" id="telefono" required>
 
+    <!-- Dirección -->
+    <label>Dirección:</label>
+    <textarea id="direccion" readonly required></textarea>
+
+    <input type="hidden" id="latitud" name="latitud">
+    <input type="hidden" id="longitud" name="longitud">
+
+    <div id="map"></div>
+
+    <button type="submit">Enviar</button>
+  </form>
+
+  <div id="resultado"></div>
   <div id="mensaje">✅ Registro enviado correctamente</div>
 
   <script>
-    // Inicializar mapa (centro en México)
-    var map = L.map('map').setView([19.4326, -99.1332], 12);
+    // Inicializar mapa (centrado en Morelos, México)
+    var map = L.map('map').setView([18.6813, -99.1013], 9);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
     var marcador;
-
-    // URL de tu Google Apps Script
     const scriptURL = "https://script.google.com/macros/s/AKfycbwOjJK4mHTpASBk_ND7icz2B3HOCcu1f0uGSwZKL9OsMSks0NlnGv2A_GuXD1iXA8kVXw/exec";
+
+    // Mostrar/ocultar campo "otro" según selección
+    document.getElementById("enfermedad").addEventListener("change", function() {
+      document.getElementById("otraEnfermedad").style.display = (this.value === "Otro") ? "block" : "none";
+    });
+    document.getElementById("tipoCaso").addEventListener("change", function() {
+      document.getElementById("otroCaso").style.display = (this.value === "Otro") ? "block" : "none";
+    });
 
     // Evento de clic en el mapa
     map.on('click', function(e) {
@@ -123,7 +157,6 @@
 
       if (marcador) { map.removeLayer(marcador); }
 
-      // Obtener dirección con Nominatim
       fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
         .then(res => res.json())
         .then(data => {
@@ -139,58 +172,16 @@
         });
     });
 
-    // Función para mostrar mensaje de éxito
     function mostrarMensaje() {
       var msg = document.getElementById("mensaje");
       msg.style.display = "block";
       setTimeout(() => { msg.style.display = "none"; }, 3000);
     }
 
-    // Manejo del formulario
+    // Envío de formulario
     document.getElementById('formulario').addEventListener('submit', function(e) {
       e.preventDefault();
 
-      var nombre = document.getElementById('nombre').value.trim();
-      var telefono = document.getElementById('telefono').value.trim();
-      var lat = document.getElementById('latitud').value;
-      var lng = document.getElementById('longitud').value;
-      var direccion = document.getElementById('direccion').value.trim();
-
-      if (!nombre || !telefono || !lat || !lng || !direccion) {
-        alert("⚠️ Por favor llena todos los campos y selecciona un punto en el mapa.");
-        return;
-      }
-
-      var formData = new URLSearchParams();
-      formData.append("nombre", nombre);
-      formData.append("telefono", telefono);
-      formData.append("latitud", lat);
-      formData.append("longitud", lng);
-      formData.append("direccion", direccion);
-
-      fetch(scriptURL, { method: 'POST', body: formData })
-        .then(response => response.text())
-        .then(res => {
-          if (res.includes("OK")) {
-            mostrarMensaje();
-            document.getElementById('resultado').innerHTML = 
-              `<h3>Último registro enviado:</h3>
-               <p><b>Nombre:</b> ${nombre}</p>
-               <p><b>Teléfono:</b> ${telefono}</p>
-               <p><b>Latitud:</b> ${lat}</p>
-               <p><b>Longitud:</b> ${lng}</p>
-               <p><b>Coordenadas GIS:</b> ${lat},${lng}</p>
-               <p><b>Dirección:</b> ${direccion}</p>`;
-            document.getElementById('formulario').reset();
-            document.getElementById('latitud').value = "";
-            document.getElementById('longitud').value = "";
-            if (marcador) { map.removeLayer(marcador); }
-          } else {
-            alert("❌ Error en el servidor: " + res);
-          }
-        })
-        .catch(err => alert("❌ Error al guardar: " + err));
-    });
-
-    // Ajustar mapa al redimensionar pantalla
-    window.addEventListener("resize"
+      var enfermedad = document.getElementById('enfermedad').value;
+      var otraEnfermedad = document.getElementById('otraEnfermedad').value.trim();
+      if (enfermedad === "Otro" && !ot
