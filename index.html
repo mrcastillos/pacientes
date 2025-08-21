@@ -6,13 +6,39 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    #map { height: 400px; margin-top: 15px; border-radius: 8px; }
-    input, textarea { margin: 5px 0; padding: 8px; width: 100%; max-width: 500px; }
+    body { 
+      font-family: Arial, sans-serif; 
+      margin: 20px; 
+      display: flex; 
+      justify-content: center;
+    }
+    .contenedor {
+      width: 100%;
+      max-width: 500px;
+    }
+    input, textarea, button {
+      margin: 5px 0; 
+      padding: 10px; 
+      width: 100%; 
+      box-sizing: border-box;
+    }
     textarea { resize: none; height: 60px; }
-    button { padding: 10px 20px; background: #0078d7; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    button { 
+      background: #0078d7; 
+      color: white; 
+      border: none; 
+      border-radius: 5px; 
+      cursor: pointer; 
+      font-size: 16px;
+    }
     button:hover { background: #005a9e; }
-    #resultado { margin-top: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; background: #f9f9f9; }
+    #resultado { 
+      margin-top: 20px; 
+      padding: 15px; 
+      border: 1px solid #ddd; 
+      border-radius: 5px; 
+      background: #f9f9f9; 
+    }
     #mensaje {
       display: none;
       position: fixed;
@@ -26,28 +52,52 @@
       z-index: 9999;
       font-weight: bold;
     }
+
+    /* Mapa cuadrado y responsivo */
+    #map {
+      width: 100%;
+      aspect-ratio: 1 / 1; /* lo hace cuadrado automáticamente */
+      margin-top: 15px;
+      border-radius: 8px;
+    }
+
+    /* Compatibilidad para navegadores sin aspect-ratio */
+    @supports not (aspect-ratio: 1/1) {
+      #map {
+        height: 0;
+        padding-bottom: 100%; /* cuadrado */
+        position: relative;
+      }
+      #map > * {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+      }
+    }
   </style>
 </head>
 <body>
 
-  <h2>Formulario con Ubicación en Mapa</h2>
-  <form id="formulario">
-    <label>Nombre:</label><br>
-    <input type="text" id="nombre" required><br>
-    <label>Teléfono:</label><br>
-    <input type="tel" id="telefono" required><br>
-    <label>Dirección:</label><br>
-    <textarea id="direccion" readonly required></textarea><br>
-    
-    <input type="hidden" id="latitud" name="latitud">
-    <input type="hidden" id="longitud" name="longitud">
+  <div class="contenedor">
+    <h2>Formulario con Ubicación en Mapa</h2>
+    <form id="formulario">
+      <label>Nombre:</label><br>
+      <input type="text" id="nombre" required><br>
+      <label>Teléfono:</label><br>
+      <input type="tel" id="telefono" required><br>
+      <label>Dirección:</label><br>
+      <textarea id="direccion" readonly required></textarea><br>
+      
+      <input type="hidden" id="latitud" name="latitud">
+      <input type="hidden" id="longitud" name="longitud">
 
-    <div id="map"></div>
+      <div id="map"></div>
 
-    <button type="submit">Enviar</button>
-  </form>
+      <button type="submit">Enviar</button>
+    </form>
 
-  <div id="resultado"></div>
+    <div id="resultado"></div>
+  </div>
 
   <div id="mensaje">✅ Registro enviado correctamente</div>
 
@@ -118,34 +168,29 @@
       formData.append("longitud", lng);
       formData.append("direccion", direccion);
 
-      fetch(scriptURL, { 
-        method: 'POST', 
-        body: formData,
-        mode: 'no-cors'  // 👈 Esto evita el bloqueo CORS
-      })
-      .then(() => {
-          // Como usamos no-cors, no podemos leer respuesta,
-          // asumimos éxito y mostramos mensaje
-          mostrarMensaje();
-
-          document.getElementById('resultado').innerHTML = 
-            `<h3>Último registro enviado:</h3>
-             <p><b>Nombre:</b> ${nombre}</p>
-             <p><b>Teléfono:</b> ${telefono}</p>
-             <p><b>Latitud:</b> ${lat}</p>
-             <p><b>Longitud:</b> ${lng}</p>
-             <p><b>Coordenadas GIS:</b> ${lat},${lng}</p>
-             <p><b>Dirección:</b> ${direccion}</p>`;
-
-          // Limpiar formulario y mapa
-          document.getElementById('formulario').reset();
-          document.getElementById('latitud').value = "";
-          document.getElementById('longitud').value = "";
-          if (marcador) { map.removeLayer(marcador); }
-      })
-      .catch(err => alert("❌ Error al guardar: " + err));
+      fetch(scriptURL, { method: 'POST', body: formData })
+        .then(response => response.text())
+        .then(res => {
+          if (res.includes("OK")) {
+            mostrarMensaje();
+            document.getElementById('resultado').innerHTML = 
+              `<h3>Último registro enviado:</h3>
+               <p><b>Nombre:</b> ${nombre}</p>
+               <p><b>Teléfono:</b> ${telefono}</p>
+               <p><b>Latitud:</b> ${lat}</p>
+               <p><b>Longitud:</b> ${lng}</p>
+               <p><b>Coordenadas GIS:</b> ${lat},${lng}</p>
+               <p><b>Dirección:</b> ${direccion}</p>`;
+            document.getElementById('formulario').reset();
+            document.getElementById('latitud').value = "";
+            document.getElementById('longitud').value = "";
+            if (marcador) { map.removeLayer(marcador); }
+          } else {
+            alert("❌ Error en el servidor: " + res);
+          }
+        })
+        .catch(err => alert("❌ Error al guardar: " + err));
     });
-  </script>
 
-</body>
-</html>
+    // Ajustar mapa al redimensionar pantalla
+    window.addEventListener("resize"
