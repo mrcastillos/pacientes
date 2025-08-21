@@ -1,25 +1,25 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Georreferenciación de casos</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 10px; padding: 0; background: #f4f6f9; }
-        h2 { text-align: center; color: #0078d7; margin-bottom: 15px; }
-        form { display: flex; flex-direction: column; gap: 12px; max-width: 500px; margin: auto; padding: 15px; background: white; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        label { font-weight: bold; margin-top: 5px; }
-        input, select, textarea, button { padding: 10px; font-size: 16px; border-radius: 5px; border: 1px solid #ccc; width: 100%; }
-        textarea { resize: none; height: 60px; }
-        button { background: #0078d7; color: white; border: none; cursor: pointer; }
-        button:hover { background: #005a9e; }
-        #map { height: 400px; width: 100%; border-radius: 8px; margin-top: 10px; }
-        #resultado { margin-top: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; background: #fff; }
-        #mensaje { display: none; position: fixed; top: 20px; right: 20px; background: #28a745; color: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); z-index: 9999; font-weight: bold; }
-        @media (max-width: 600px) { form { padding: 10px; } button { font-size: 14px; padding: 8px; } }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Georreferenciación de casos</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<style>
+    body { font-family: Arial, sans-serif; margin: 10px; padding: 0; background: #f4f6f9; }
+    h2 { text-align: center; color: #0078d7; margin-bottom: 15px; }
+    form { display: flex; flex-direction: column; gap: 12px; max-width: 500px; margin: auto; padding: 15px; background: white; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    label { font-weight: bold; margin-top: 5px; }
+    input, select, textarea, button { padding: 10px; font-size: 16px; border-radius: 5px; border: 1px solid #ccc; width: 100%; }
+    textarea { resize: none; height: 60px; }
+    button { background: #0078d7; color: white; border: none; cursor: pointer; }
+    button:hover { background: #005a9e; }
+    #map { height: 400px; width: 100%; border-radius: 8px; margin-top: 10px; }
+    #resultado { margin-top: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; background: #fff; }
+    #mensaje { display: none; position: fixed; top: 20px; right: 20px; background: #28a745; color: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); z-index: 9999; font-weight: bold; }
+    @media (max-width: 600px) { form { padding: 10px; } button { font-size: 14px; padding: 8px; } }
+</style>
 </head>
 <body>
 
@@ -67,11 +67,14 @@
 <script>
     // Inicializar mapa
     var map = L.map('map').setView([18.6813, -99.1013], 9);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
-    var marcador;
-    const scriptURL = "TU_URL_DE_GOOGLE_SCRIPT"; // Reemplaza con tu URL de Apps Script
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
 
-    // Mostrar/ocultar "Otro"
+    var marcador;
+    const scriptURL = "https://script.google.com/macros/s/AKfycbw7aE78V9TkUWlgL9dnKw8l7GfQc5N1W61XvueHPusHNMlVXXPp3qBFZy7T5e_kgQ2JoQ/exec";
+
+    // Mostrar/ocultar campos "Otro"
     document.getElementById("enfermedad").addEventListener("change", function() {
         document.getElementById("otraEnfermedad").style.display = (this.value === "Otro") ? "block" : "none";
     });
@@ -79,7 +82,7 @@
         document.getElementById("otroCaso").style.display = (this.value === "Otro") ? "block" : "none";
     });
 
-    // Selección de ubicación
+    // Selección de ubicación en el mapa
     map.on('click', function(e) {
         var lat = e.latlng.lat.toFixed(6);
         var lng = e.latlng.lng.toFixed(6);
@@ -93,6 +96,7 @@
             .then(data => {
                 var direccion = data.display_name || "Dirección no encontrada";
                 document.getElementById('direccion').value = direccion;
+
                 marcador = L.marker([lat, lng]).addTo(map)
                     .bindPopup(`<b>Ubicación:</b><br>${direccion}<br>(${lat}, ${lng})`)
                     .openPopup();
@@ -129,7 +133,7 @@
             return;
         }
 
-        // Preparar datos
+        // Preparar datos a enviar
         var formData = new URLSearchParams();
         formData.append("enfermedad", (enfermedad === "Otro") ? otraEnfermedad : enfermedad);
         formData.append("tipoCaso", (tipoCaso === "Otro") ? otroCaso : tipoCaso);
