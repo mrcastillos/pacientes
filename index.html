@@ -13,6 +13,19 @@
     button { padding: 10px 20px; background: #0078d7; color: white; border: none; border-radius: 5px; cursor: pointer; }
     button:hover { background: #005a9e; }
     #resultado { margin-top: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; background: #f9f9f9; }
+    #mensaje {
+      display: none;
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #28a745;
+      color: white;
+      padding: 15px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+      z-index: 9999;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -36,8 +49,10 @@
 
   <div id="resultado"></div>
 
+  <div id="mensaje">✅ Registro enviado correctamente</div>
+
   <script>
-    // Inicializar mapa en México
+    // Inicializar mapa (centro en México)
     var map = L.map('map').setView([19.4326, -99.1332], 12);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors'
@@ -45,10 +60,10 @@
 
     var marcador;
 
-    // URL del script de Google Apps Script (tuya)
-    const scriptURL = "https://script.google.com/macros/s/AKfycbzY1FAPp1BnLOAkBe9O6hrw5zmfLCIs6yAQAEGBg10E7MM_foqcddyOw2EELSuJDc9bmw/exec";
+    // URL de tu Google Apps Script
+    const scriptURL = "https://script.google.com/macros/s/AKfycby6jraeSKy7QjBQKicw2D0FSPj6sQEjgXgQFXRx9PWjOzgIt7mOzDO2TSqGwIglrRwZTA/exec";
 
-    // Cuando hago clic en el mapa
+    // Evento de clic en el mapa
     map.on('click', function(e) {
       var lat = e.latlng.lat.toFixed(6);
       var lng = e.latlng.lng.toFixed(6);
@@ -57,20 +72,29 @@
       document.getElementById('longitud').value = lng;
 
       if (marcador) { map.removeLayer(marcador); }
-      marcador = L.marker([lat, lng]).addTo(map);
 
-      // Buscar dirección con Nominatim
+      // Obtener dirección con Nominatim
       fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
         .then(res => res.json())
         .then(data => {
           var direccion = data.display_name || "Dirección no encontrada";
           document.getElementById('direccion').value = direccion;
-          marcador.bindPopup(`<b>Ubicación:</b><br>${direccion}`).openPopup();
+
+          marcador = L.marker([lat, lng]).addTo(map)
+            .bindPopup(`<b>Ubicación seleccionada:</b><br>${direccion}<br>(${lat}, ${lng})`)
+            .openPopup();
         })
         .catch(() => {
           document.getElementById('direccion').value = "Error al obtener dirección";
         });
     });
+
+    // Función para mostrar mensaje de éxito
+    function mostrarMensaje() {
+      var msg = document.getElementById("mensaje");
+      msg.style.display = "block";
+      setTimeout(() => { msg.style.display = "none"; }, 3000);
+    }
 
     // Manejo del formulario
     document.getElementById('formulario').addEventListener('submit', function(e) {
@@ -98,15 +122,24 @@
         .then(response => response.text())
         .then(res => {
           if (res.includes("OK")) {
+            // Mostrar mensaje de éxito
+            mostrarMensaje();
+
+            // Mostrar datos enviados
             document.getElementById('resultado').innerHTML = 
-              `<h3>Datos guardados con éxito ✅</h3>
+              `<h3>Último registro enviado:</h3>
                <p><b>Nombre:</b> ${nombre}</p>
                <p><b>Teléfono:</b> ${telefono}</p>
                <p><b>Latitud:</b> ${lat}</p>
                <p><b>Longitud:</b> ${lng}</p>
                <p><b>Coordenadas GIS:</b> ${lat},${lng}</p>
                <p><b>Dirección:</b> ${direccion}</p>`;
+
+            // Limpiar formulario y mapa
             document.getElementById('formulario').reset();
+            document.getElementById('latitud').value = "";
+            document.getElementById('longitud').value = "";
+            if (marcador) { map.removeLayer(marcador); }
           } else {
             alert("❌ Error en el servidor: " + res);
           }
