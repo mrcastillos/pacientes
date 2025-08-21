@@ -6,45 +6,13 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-    }
-    #map {
-      height: 400px;
-      margin-top: 15px;
-      border-radius: 8px;
-    }
-    form {
-      margin-bottom: 20px;
-    }
-    input {
-      margin: 5px 0;
-      padding: 8px;
-      width: 100%;
-      max-width: 400px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    button {
-      padding: 10px 20px;
-      background: #0078d7;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-    button:hover {
-      background: #005a9e;
-    }
-    #resultado {
-      margin-top: 20px;
-      padding: 15px;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      background: #f9f9f9;
-    }
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    #map { height: 400px; margin-top: 15px; border-radius: 8px; }
+    input, textarea { margin: 5px 0; padding: 8px; width: 100%; max-width: 500px; }
+    textarea { resize: none; height: 60px; }
+    button { padding: 10px 20px; background: #0078d7; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    button:hover { background: #005a9e; }
+    #resultado { margin-top: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; background: #f9f9f9; }
   </style>
 </head>
 <body>
@@ -55,8 +23,9 @@
     <input type="text" id="nombre" required><br>
     <label>Teléfono:</label><br>
     <input type="tel" id="telefono" required><br>
+    <label>Dirección:</label><br>
+    <textarea id="direccion" readonly required></textarea><br>
     
-    <!-- Campos ocultos para coordenadas -->
     <input type="hidden" id="latitud" name="latitud">
     <input type="hidden" id="longitud" name="longitud">
 
@@ -68,55 +37,81 @@
   <div id="resultado"></div>
 
   <script>
-    // Inicializar mapa en un punto por defecto (México)
+    // Inicializar mapa en México
     var map = L.map('map').setView([19.4326, -99.1332], 12);
-
-    // Cargar mapa de OpenStreetMap
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
     var marcador;
 
-    // Evento de clic en el mapa
+    // URL del script de Google Apps Script (tuya)
+    const scriptURL = "https://script.google.com/macros/s/AKfycbzY1FAPp1BnLOAkBe9O6hrw5zmfLCIs6yAQAEGBg10E7MM_foqcddyOw2EELSuJDc9bmw/exec";
+
+    // Cuando hago clic en el mapa
     map.on('click', function(e) {
       var lat = e.latlng.lat.toFixed(6);
       var lng = e.latlng.lng.toFixed(6);
 
-      // Guardar coordenadas en el formulario
       document.getElementById('latitud').value = lat;
       document.getElementById('longitud').value = lng;
 
-      // Colocar marcador
-      if (marcador) {
-        map.removeLayer(marcador);
-      }
-      marcador = L.marker([lat, lng]).addTo(map)
-        .bindPopup("Ubicación seleccionada:<br>Lat: " + lat + "<br>Lng: " + lng)
-        .openPopup();
+      if (marcador) { map.removeLayer(marcador); }
+      marcador = L.marker([lat, lng]).addTo(map);
+
+      // Buscar dirección con Nominatim
+      fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
+        .then(res => res.json())
+        .then(data => {
+          var direccion = data.display_name || "Dirección no encontrada";
+          document.getElementById('direccion').value = direccion;
+          marcador.bindPopup(`<b>Ubicación:</b><br>${direccion}`).openPopup();
+        })
+        .catch(() => {
+          document.getElementById('direccion').value = "Error al obtener dirección";
+        });
     });
 
-    // Manejar envío del formulario
+    // Manejo del formulario
     document.getElementById('formulario').addEventListener('submit', function(e) {
       e.preventDefault();
 
-      var nombre = document.getElementById('nombre').value;
-      var telefono = document.getElementById('telefono').value;
+      var nombre = document.getElementById('nombre').value.trim();
+      var telefono = document.getElementById('telefono').value.trim();
       var lat = document.getElementById('latitud').value;
       var lng = document.getElementById('longitud').value;
+      var direccion = document.getElementById('direccion').value.trim();
 
-      if (!lat || !lng) {
-        alert("Por favor selecciona una ubicación en el mapa.");
+      if (!nombre || !telefono || !lat || !lng || !direccion) {
+        alert("⚠️ Por favor llena todos los campos y selecciona un punto en el mapa.");
         return;
       }
 
-      document.getElementById('resultado').innerHTML = `
-        <h3>Datos Capturados:</h3>
-        <p><b>Nombre:</b> ${nombre}</p>
-        <p><b>Teléfono:</b> ${telefono}</p>
-        <p><b>Latitud:</b> ${lat}</p>
-        <p><b>Longitud:</b> ${lng}</p>
-      `;
+      var formData = new URLSearchParams();
+      formData.append("nombre", nombre);
+      formData.append("telefono", telefono);
+      formData.append("latitud", lat);
+      formData.append("longitud", lng);
+      formData.append("direccion", direccion);
+
+      fetch(scriptURL, { method: 'POST', body: formData })
+        .then(response => response.text())
+        .then(res => {
+          if (res.includes("OK")) {
+            document.getElementById('resultado').innerHTML = 
+              `<h3>Datos guardados con éxito ✅</h3>
+               <p><b>Nombre:</b> ${nombre}</p>
+               <p><b>Teléfono:</b> ${telefono}</p>
+               <p><b>Latitud:</b> ${lat}</p>
+               <p><b>Longitud:</b> ${lng}</p>
+               <p><b>Coordenadas GIS:</b> ${lat},${lng}</p>
+               <p><b>Dirección:</b> ${direccion}</p>`;
+            document.getElementById('formulario').reset();
+          } else {
+            alert("❌ Error en el servidor: " + res);
+          }
+        })
+        .catch(err => alert("❌ Error al guardar: " + err));
     });
   </script>
 
