@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Historia Clínica Optométrica</title>
+
+<style>
+body{
+    font-family: Arial, sans-serif;
+    background:#f2f4f8;
+    margin:0;
+    padding:15px;
+}
+h1{
+    text-align:center;
+}
+h2{
+    color:#0f172a;
+    margin-top:25px;
+}
+.card{
+    background:#ffffff;
+    padding:15px;
+    border-radius:12px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.08);
+    margin-bottom:15px;
+}
+input, select, textarea{
+    width:100%;
+    padding:8px;
+    margin-top:5px;
+    margin-bottom:10px;
+    border-radius:6px;
+    border:1px solid #ccc;
+    font-size:14px;
+}
+label{
+    font-weight:bold;
+    font-size:14px;
+}
+.grid{
+    display:grid;
+    gap:10px;
+}
+@media(min-width:600px){
+    .grid-2{ grid-template-columns:1fr 1fr; }
+    .grid-3{ grid-template-columns:1fr 1fr 1fr; }
+}
+button{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:8px;
+    background:#1e3a8a;
+    color:white;
+    font-size:16px;
+}
+.checkbox-group label{
+    font-weight:normal;
+    display:block;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Historia Clínica Optométrica</h1>
+
+<form>
+
+<!-- DATOS GENERALES -->
+<h2>📋 Datos Generales</h2>
+<div class="card grid grid-2">
+    <div>
+        <label>Folio</label>
+        <input type="text">
+    </div>
+    <div>
+        <label>Fecha</label>
+        <input type="date">
+    </div>
+
+    <div>
+        <label>Nombre</label>
+        <input type="text">
+    </div>
+    <div>
+        <label>Fecha de Nacimiento</label>
+        <input type="date">
+    </div>
+
+    <div>
+        <label>Edad</label>
+        <input type="number">
+    </div>
+    <div>
+        <label>Sexo</label>
+        <select>
+            <option>Seleccione</option>
+            <option>Femenino</option>
+            <option>Masculino</option>
+            <option>Otro</option>
+        </select>
+    </div>
+
+    <div>
+        <label>Estado Civil</label>
+        <input type="text">
+    </div>
+    <div>
+        <label>Ocupación</label>
+        <input type="text">
+    </div>
+</div>
+
+<!-- ANTECEDENTES PERSONALES -->
+<h2>🩺 Antecedentes Personales</h2>
+<div class="card">
+
+    <label>¿Está embarazada?</label>
+    <select>
+        <option>No aplica</option>
+        <option>Sí</option>
+        <option>No</option>
+    </select>
+
+    <div class="grid grid-3">
+        <div>
+            <label>Gestaciones</label>
+            <input type="number">
+        </div>
+        <div>
+            <label>Cesáreas</label>
+            <input type="number">
+        </div>
+        <div>
+            <label>Partos</label>
+            <input type="number">
+        </div>
+    </div>
+
+    <label>Tratamiento Médico</label>
+    <input type="text">
+
+    <label>Alergias</label>
+    <input type="text">
+
+    <label>Enfermedades</label>
+    <input type="text">
+
+</div>
+
+<!-- ANTECEDENTES FAMILIARES -->
+<h2>👨‍👩‍👧 Antecedentes Familiares</h2>
+<div class="card checkbox-group">
+    <label><input type="checkbox"> Diabetes</label>
+    <label><input type="checkbox"> Hipertensión</label>
+    <label><input type="checkbox"> Cáncer</label>
+    <label><input type="checkbox"> Cardiovasculares</label>
+    <label><input type="checkbox"> Pulmonares</label>
+    <label><input type="checkbox"> Alzheimer</label>
+    <label><input type="checkbox"> Glaucoma</label>
+    <label><input type="checkbox"> Retinopatía</label>
+    <label><input type="checkbox"> Degeneración Macular</label>
+    <label><input type="checkbox"> Ambliopía</label>
+    <label><input type="checkbox"> Catarata</label>
+    <label><input type="checkbox"> Miopía</label>
+    <label><input type="checkbox"> Astigmatismo</label>
+    <label><input type="checkbox"> Desprendimiento de Retina</label>
+
+    <label>Otros:</label>
+    <input type="text">
+</div>
+
+<!-- MOTIVO DE CONSULTA -->
+<h2>👁️ Motivo de Consulta</h2>
+<div class="card">
+
+    <label>¿Tiene algún problema ocular?</label>
+    <textarea></textarea>
+
+    <label>¿Usa lentes?</label>
+    <select>
+        <option>No</option>
+        <option>Sí</option>
+    </select>
+
+    <label>Frecuencia de uso</label>
+    <select>
+        <option>Frecuente</option>
+        <option>Ocasional</option>
+        <option>Nulo</option>
+    </select>
+
+    <label>Variación de visión</label>
+    <select>
+        <option>Progresiva</option>
+        <option>Subita</option>
+        <option>No ha notado cambios</option>
+    </select>
+
+    <label>Signos y síntomas</label>
+    <textarea></textarea>
+
+</div>
+
+<!-- ANTECEDENTES OCULARES -->
+<h2>🔬 Antecedentes Oculares</h2>
+<div class="card">
+
+    <label>Enfermedad Ocular</label>
+    <input type="text">
+
+    <label>Trauma Ocular</label>
+    <input type="text">
+
+    <label>Enfermedad Sistémica</label>
+    <input type="text">
+
+    <label>Antecedentes Quirúrgicos</label>
+    <input type="text">
+
+</div>
+
+<button type="submit">Guardar Historia Clínica</button>
+
+</form>
+
+</body>
+</html>
