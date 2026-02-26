@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Evaluación Funcional Visual</title>
+<style>
+    body{
+        font-family: Arial, sans-serif;
+        background:#f4f6f9;
+        margin:0;
+        padding:15px;
+    }
+    h2{
+        margin-top:25px;
+        color:#1e3a8a;
+    }
+    .card{
+        background:#ffffff;
+        padding:15px;
+        border-radius:12px;
+        box-shadow:0 4px 10px rgba(0,0,0,0.08);
+        margin-bottom:15px;
+    }
+    label{
+        display:block;
+        margin:8px 0;
+        font-size:15px;
+    }
+    input[type="checkbox"], input[type="radio"]{
+        margin-right:8px;
+        transform: scale(1.2);
+    }
+    .range-container{
+        margin-top:10px;
+    }
+    input[type="range"]{
+        width:100%;
+    }
+    .range-value{
+        text-align:center;
+        font-weight:bold;
+        margin-top:5px;
+    }
+    .grid{
+        display:grid;
+        gap:10px;
+    }
+    @media(min-width:600px){
+        .grid-2{
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+    button{
+        width:100%;
+        padding:12px;
+        border:none;
+        border-radius:8px;
+        background:#1e3a8a;
+        color:white;
+        font-size:16px;
+        margin-top:20px;
+    }
+</style>
+</head>
+<body>
+
+<h1>Evaluación Funcional Visual</h1>
+
+<form>
+
+<!-- VISIÓN LEJANA -->
+<h2>👁️ Visión Lejana</h2>
+<div class="card grid grid-2">
+    <div>
+        <label><input type="checkbox"> Tiene dificultad para desplazarse</label>
+        <label><input type="checkbox"> Se desplaza solo en la calle</label>
+        <label><input type="checkbox"> Se desplaza en lugares lejanos</label>
+        <label><input type="checkbox"> Conduce automóvil</label>
+        <label><input type="checkbox"> Camina sin tropezar</label>
+        <label><input type="checkbox"> Ve cine</label>
+    </div>
+    <div>
+        <label><input type="checkbox"> Se desplaza en lugares desconocidos</label>
+        <label><input type="checkbox"> Ve señales de tráfico</label>
+        <label><input type="checkbox"> Ve letreros de calles</label>
+        <label><input type="checkbox"> Ve letreros de rutas</label>
+        <label><input type="checkbox"> Ve televisión</label>
+        <label><input type="checkbox"> Ve hojas de árboles</label>
+    </div>
+</div>
+
+<!-- VISIÓN INTERMEDIA -->
+<h2>👁️ Visión Intermedia</h2>
+<div class="card">
+    <label><input type="checkbox"> Reconoce rostros</label>
+</div>
+
+<!-- VISIÓN CERCANA -->
+<h2>👁️ Visión Cercana</h2>
+<div class="card">
+    <label><input type="checkbox"> Nota distorsión al leer</label>
+    <label><input type="checkbox"> Nota fatiga visual</label>
+    <label><input type="checkbox"> Lee por mucho tiempo</label>
+
+    <div class="range-container">
+        <label>Horas de uso de dispositivos electrónicos:</label>
+        <input type="range" min="0" max="12" value="2" id="horasUso" oninput="actualizarValor(this.value)">
+        <div class="range-value"><span id="valorHoras">2</span> horas</div>
+    </div>
+</div>
+
+<!-- ILUMINACIÓN -->
+<h2>💡 Iluminación</h2>
+<div class="card">
+    <label><input type="checkbox"> Se deslumbra fácilmente</label>
+    <label><input type="checkbox"> Usa lentes de sol</label>
+
+    <h3>Ve mejor en:</h3>
+    <label><input type="radio" name="ambiente"> Interiores</label>
+    <label><input type="radio" name="ambiente"> Exteriores</label>
+
+    <h3>Tipo de luz:</h3>
+    <label><input type="radio" name="luz"> Luz solar</label>
+    <label><input type="radio" name="luz"> Luz artificial</label>
+    <label><input type="radio" name="luz"> Día nublado</label>
+
+    <h3>Independencia:</h3>
+    <label><input type="radio" name="independencia"> Buena</label>
+    <label><input type="radio" name="independencia"> Regular</label>
+    <label><input type="radio" name="independencia"> Mala</label>
+
+    <h3>Orientación:</h3>
+    <label><input type="radio" name="orientacion"> Buena</label>
+    <label><input type="radio" name="orientacion"> Regular</label>
+    <label><input type="radio" name="orientacion"> Mala</label>
+
+    <h3>Distinción de colores:</h3>
+    <label><input type="radio" name="colores"> Sí</label>
+    <label><input type="radio" name="colores"> No</label>
+    <input type="text" placeholder="¿Cuáles colores no distingue?" style="width:100%; padding:8px; margin-top:8px;">
+</div>
+
+<button type="submit">Guardar Evaluación</button>
+
+</form>
+
+<script>
+function actualizarValor(val){
+    document.getElementById('valorHoras').innerText = val;
+}
+</script>
+
+</body>
+</html>
