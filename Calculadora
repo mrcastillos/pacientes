@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora Optometría Pro</title>
+
+<style>
+body{
+    font-family: Arial, sans-serif;
+    background:#f4f6f9;
+    margin:0;
+    padding:15px;
+}
+.container{
+    max-width:520px;
+    margin:auto;
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.1);
+}
+h2{text-align:center;}
+label{font-weight:bold;}
+input{
+    width:100%;
+    padding:8px;
+    margin:5px 0 15px 0;
+    border-radius:6px;
+    border:1px solid #ccc;
+}
+button{
+    width:100%;
+    padding:10px;
+    background:#007bff;
+    color:white;
+    border:none;
+    border-radius:6px;
+    font-size:16px;
+}
+.result{
+    background:#eef3ff;
+    padding:12px;
+    border-radius:6px;
+    margin-top:15px;
+    font-size:14px;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+<h2>Calculadora Optometría Pro</h2>
+
+<label>Esfera (D)</label>
+<input type="number" step="0.01" id="sphere">
+
+<label>Cilindro (D)</label>
+<input type="number" step="0.01" id="cyl">
+
+<label>Eje (°)</label>
+<input type="number" min="0" max="180" id="axis">
+
+<label>Distancia de vértice (mm)</label>
+<input type="number" step="0.1" id="vertex" value="12">
+
+<button onclick="calcular()">Calcular</button>
+
+<div class="result" id="resultado"></div>
+</div>
+
+<script>
+
+function transponer(s, c, a){
+    let newSphere = (s + c).toFixed(2);
+    let newCyl = (-c).toFixed(2);
+    let newAxis = (parseFloat(a) + 90);
+    if(newAxis > 180) newAxis -= 180;
+    return {newSphere, newCyl, newAxis};
+}
+
+function vertice(power, d){
+    let meters = d/1000;
+    return (power/(1 - meters*power)).toFixed(2);
+}
+
+function diagnostico(s,c){
+    let absC = Math.abs(c);
+
+    if(c == 0){
+        if(s > 0) return "Hipermetropía";
+        if(s < 0) return "Miopía";
+        return "Emetropía";
+    }
+
+    if(s == 0) return "Astigmatismo Miópico Simple";
+
+    if(s < 0) return "Astigmatismo Miópico Compuesto";
+
+    if(s > 0){
+        if(Math.abs(s) == absC) return "Astigmatismo Hipermetrópico Simple";
+        if(Math.abs(s) > absC) return "Astigmatismo Hipermetrópico Compuesto";
+        if(Math.abs(s) < absC) return "Astigmatismo Mixto";
+    }
+
+    return "No determinado";
+}
+
+function tipoAstigmatismo(c,a){
+    if(c == 0) return "No aplica";
+
+    if((a >= 0 && a <= 30) || (a >=150 && a <=180))
+        return "Con la regla";
+
+    if(a > 60 && a <120)
+        return "Contra la regla";
+
+    return "Oblicuo";
+}
+
+function calcular(){
+
+    let s = parseFloat(document.getElementById("sphere").value);
+    let c = parseFloat(document.getElementById("cyl").value);
+    let a = parseFloat(document.getElementById("axis").value);
+    let v = parseFloat(document.getElementById("vertex").value);
+
+    if(isNaN(s) || isNaN(c) || isNaN(a)){
+        alert("Completa los campos");
+        return;
+    }
+
+    let eq = (s + (c/2)).toFixed(2);
+    let trans = transponer(s,c,a);
+
+    let mer1 = s.toFixed(2);
+    let mer2 = (s+c).toFixed(2);
+
+    let vertS = vertice(s,v);
+    let vertM2 = vertice(s+c,v);
+
+    let diag = diagnostico(s,c);
+    let tipo = tipoAstigmatismo(c,a);
+
+    document.getElementById("resultado").innerHTML = `
+    <b>Diagnóstico:</b> ${diag}<br>
+    <b>Tipo:</b> ${tipo}<br><br>
+
+    <b>Receta Original:</b> ${s.toFixed(2)} ${c.toFixed(2)} x ${a}°<br><br>
+
+    <b>Transposición:</b><br>
+    ${trans.newSphere} ${trans.newCyl} x ${trans.newAxis}°<br><br>
+
+    <b>Cruz Óptica:</b><br>
+    ${a}° = ${mer1} D<br>
+    ${(a+90>180?a-90:a+90)}° = ${mer2} D<br><br>
+
+    <b>Equivalente Esférico:</b> ${eq} D<br><br>
+
+    <b>Compensación por vértice (${v} mm):</b><br>
+    ${a}° = ${vertS} D<br>
+    ${(a+90>180?a-90:a+90)}° = ${vertM2} D
+    `;
+}
+
+</script>
+</body>
+</html>
