@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora Optometría Clínica</title>
+
+<style>
+body{
+    font-family: Arial, sans-serif;
+    background:#f4f6f9;
+    margin:0;
+    padding:15px;
+}
+.container{
+    max-width:1100px;
+    margin:auto;
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.1);
+}
+.row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:25px;
+}
+.eye{
+    flex:1;
+    min-width:320px;
+}
+input{
+    width:100%;
+    padding:6px;
+    margin-bottom:10px;
+}
+button{
+    width:100%;
+    padding:12px;
+    background:#007bff;
+    color:white;
+    border:none;
+    border-radius:6px;
+    font-size:16px;
+}
+canvas{
+    background:#f0f4ff;
+    border-radius:8px;
+    margin-top:10px;
+}
+.result{
+    background:#eef3ff;
+    padding:10px;
+    border-radius:6px;
+    margin-top:10px;
+    font-size:14px;
+}
+h3{text-align:center;}
+h2{text-align:center;}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h2>Calculadora Optometría Clínica Completa</h2>
+
+<div class="row">
+
+<div class="eye">
+<h3>OD</h3>
+<input type="number" step="0.01" id="s_od" placeholder="Esfera">
+<input type="number" step="0.01" id="c_od" placeholder="Cilindro">
+<input type="number" id="a_od" placeholder="Eje">
+<canvas id="canvas_od" width="260" height="260"></canvas>
+<div class="result" id="res_od"></div>
+</div>
+
+<div class="eye">
+<h3>OI</h3>
+<input type="number" step="0.01" id="s_oi" placeholder="Esfera">
+<input type="number" step="0.01" id="c_oi" placeholder="Cilindro">
+<input type="number" id="a_oi" placeholder="Eje">
+<canvas id="canvas_oi" width="260" height="260"></canvas>
+<div class="result" id="res_oi"></div>
+</div>
+
+</div>
+
+<br>
+<button onclick="calcular()">Calcular</button>
+
+</div>
+
+<script>
+
+// -------- FUNCIONES CLÍNICAS --------
+
+function diagnostico(s,c){
+    let absC = Math.abs(c);
+
+    if(c == 0){
+        if(s > 0) return "Hipermetropía";
+        if(s < 0) return "Miopía";
+        return "Emetropía";
+    }
+
+    if(s == 0) return "Astigmatismo Miópico Simple";
+    if(s < 0) return "Astigmatismo Miópico Compuesto";
+
+    if(s > 0){
+        if(Math.abs(s) == absC) return "Astigmatismo Hipermetrópico Simple";
+        if(Math.abs(s) > absC) return "Astigmatismo Hipermetrópico Compuesto";
+        if(Math.abs(s) < absC) return "Astigmatismo Mixto";
+    }
+
+    return "No determinado";
+}
+
+function tipoAstigmatismo(c,a){
+    if(c == 0) return "No aplica";
+
+    if((a >= 0 && a <= 30) || (a >=150 && a <=180))
+        return "Con la regla";
+
+    if(a > 60 && a <120)
+        return "Contra la regla";
+
+    return "Oblicuo";
+}
+
+function regularidad(a){
+    if(a >=0 && a<=180) return "Regular";
+    return "Irregular";
+}
+
+function transponer(s,c,a){
+    let newSphere = s + c;
+    let newCyl = -c;
+    let newAxis = a + 90;
+    if(newAxis > 180) newAxis -= 180;
+    return {newSphere,newCyl,newAxis};
+}
+
+// -------- DIBUJO CRUZ ÓPTICA --------
+
+function dibujarCruz(canvasId, esfera, cilindro, eje){
+
+    let canvas = document.getElementById(canvasId);
+    let ctx = canvas.getContext("2d");
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    let centro = canvas.width/2;
+    let radio = 90;
+
+    ctx.save();
+    ctx.translate(centro,centro);
+    ctx.rotate((eje*Math.PI)/180);
+
+    ctx.beginPath();
+    ctx.moveTo(-radio,0);
+    ctx.lineTo(radio,0);
+    ctx.moveTo(0,-radio);
+    ctx.lineTo(0,radio);
+    ctx.strokeStyle="black";
+    ctx.lineWidth=2;
+    ctx.stroke();
+    ctx.restore();
+
+    let mer1 = esfera;
+    let mer2 = esfera + cilindro;
+
+    ctx.fillStyle="black";
+    ctx.font="14px Arial";
+    ctx.fillText(mer1.toFixed(2)+" D", 15,20);
+    ctx.fillText(mer2.toFixed(2)+" D", 160,20);
+}
+
+// -------- CALCULAR --------
+
+function procesarOjo(s,c,a,canvasId,resId){
+
+    let mer1 = s;
+    let mer2 = s + c;
+    let eq = s + (c/2);
+    let trans = transponer(s,c,a);
+    let eje90 = a + 90;
+    if(eje90 > 180) eje90 -= 180;
+
+    dibujarCruz(canvasId,s,c,a);
+
+    document.getElementById(resId).innerHTML = `
+    <b>Diagnóstico:</b> ${diagnostico(s,c)}<br>
+    <b>Tipo:</b> ${tipoAstigmatismo(c,a)}<br>
+    <b>Regularidad:</b> ${regularidad(a)}<br><br>
+
+    <b>Receta original:</b><br>
+    ${s.toFixed(2)} ${c.toFixed(2)} x ${a}°<br><br>
+
+    <b>Transposición:</b><br>
+    ${trans.newSphere.toFixed(2)} ${trans.newCyl.toFixed(2)} x ${trans.newAxis}°<br><br>
+
+    <b>Fórmula bicilíndrica:</b><br>
+    ${mer1.toFixed(2)} DC x ${a}°<br>
+    ${mer2.toFixed(2)} DC x ${eje90}°<br><br>
+
+    <b>Equivalente esférico:</b> ${eq.toFixed(2)} D
+    `;
+}
+
+function calcular(){
+
+    let s_od=parseFloat(document.getElementById("s_od").value)||0;
+    let c_od=parseFloat(document.getElementById("c_od").value)||0;
+    let a_od=parseFloat(document.getElementById("a_od").value)||0;
+
+    let s_oi=parseFloat(document.getElementById("s_oi").value)||0;
+    let c_oi=parseFloat(document.getElementById("c_oi").value)||0;
+    let a_oi=parseFloat(document.getElementById("a_oi").value)||0;
+
+    procesarOjo(s_od,c_od,a_od,"canvas_od","res_od");
+    procesarOjo(s_oi,c_oi,a_oi,"canvas_oi","res_oi");
+}
+
+</script>
+</body>
+</html>
