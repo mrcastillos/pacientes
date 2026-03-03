@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Optometría Pro Max</title>
+
+<style>
+body{
+    margin:0;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg,#dfe9f3,#ffffff);
+}
+.container{
+    max-width:1200px;
+    margin:auto;
+    padding:20px;
+}
+h1{
+    text-align:center;
+    color:#2c3e50;
+}
+.grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+}
+@media(max-width:900px){
+    .grid{ grid-template-columns:1fr; }
+}
+.card{
+    background:white;
+    padding:20px;
+    border-radius:18px;
+    box-shadow:0 8px 20px rgba(0,0,0,0.08);
+}
+input{
+    width:100%;
+    padding:10px;
+    margin:6px 0;
+    border-radius:10px;
+    border:1px solid #ccc;
+}
+button{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:12px;
+    background:#6c63ff;
+    color:white;
+    font-size:16px;
+    cursor:pointer;
+    margin-top:10px;
+}
+button:hover{ background:#574fd6; }
+canvas{
+    width:100%;
+    max-width:320px;
+    display:block;
+    margin:auto;
+    background:#f8fbff;
+    border-radius:50%;
+}
+.result{
+    margin-top:15px;
+    font-size:14px;
+    line-height:1.5;
+}
+.exportBtn{
+    background:#00b894;
+    margin-top:10px;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h1>👁️ Optometría Pro Max</h1>
+
+<div class="grid">
+
+<div class="card">
+<h2>OD</h2>
+<input type="number" step="0.01" id="s_od" placeholder="Esfera">
+<input type="number" step="0.01" id="c_od" placeholder="Cilindro">
+<input type="number" id="a_od" placeholder="Eje (0-180)">
+<canvas id="canvas_od" width="320" height="320"></canvas>
+<button class="exportBtn" onclick="exportar('canvas_od')">Exportar PNG</button>
+<div class="result" id="res_od"></div>
+</div>
+
+<div class="card">
+<h2>OI</h2>
+<input type="number" step="0.01" id="s_oi" placeholder="Esfera">
+<input type="number" step="0.01" id="c_oi" placeholder="Cilindro">
+<input type="number" id="a_oi" placeholder="Eje (0-180)">
+<canvas id="canvas_oi" width="320" height="320"></canvas>
+<button class="exportBtn" onclick="exportar('canvas_oi')">Exportar PNG</button>
+<div class="result" id="res_oi"></div>
+</div>
+
+</div>
+
+<button onclick="calcular()">Calcular</button>
+
+</div>
+
+<script>
+
+// ---------- CLASIFICACIONES ----------
+
+function tipoAstigmatismo(c,a){
+    if(c==0) return "Sin astigmatismo";
+    if((a>=0&&a<=30)||(a>=150&&a<=180)) return "Con la regla";
+    if(a>60&&a<120) return "Contra la regla";
+    return "Oblicuo";
+}
+
+function colorTipo(tipo){
+    if(tipo=="Con la regla") return "#e74c3c";
+    if(tipo=="Contra la regla") return "#3498db";
+    if(tipo=="Oblicuo") return "#27ae60";
+    return "#2c3e50";
+}
+
+// ---------- DIBUJO AVANZADO ----------
+
+function dibujar(canvasId,s,c,a){
+
+    let canvas=document.getElementById(canvasId);
+    let ctx=canvas.getContext("2d");
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    let centro=canvas.width/2;
+    let radio=120;
+
+    let tipo=tipoAstigmatismo(c,a);
+    let color=colorTipo(tipo);
+
+    // transportador
+    ctx.translate(centro,centro);
+    ctx.strokeStyle="#d0d7e2";
+    ctx.lineWidth=1;
+
+    for(let i=0;i<180;i+=10){
+        ctx.beginPath();
+        ctx.rotate((10*Math.PI)/180);
+        ctx.moveTo(0,-radio);
+        ctx.lineTo(0,-radio+10);
+        ctx.stroke();
+    }
+
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.translate(centro,centro);
+
+    // animación suave
+    ctx.rotate((a*Math.PI)/180);
+
+    ctx.strokeStyle=color;
+    ctx.lineWidth=4;
+
+    ctx.beginPath();
+    ctx.moveTo(-radio,0);
+    ctx.lineTo(radio,0);
+    ctx.moveTo(0,-radio);
+    ctx.lineTo(0,radio);
+    ctx.stroke();
+
+    let mer1=s;
+    let mer2=s+c;
+
+    ctx.fillStyle=color;
+    ctx.font="bold 14px Segoe UI";
+
+    ctx.fillText(mer1.toFixed(2)+"D", radio+5,5);
+    ctx.fillText(mer2.toFixed(2)+"D",5,-radio-5);
+
+    ctx.setTransform(1,0,0,1,0,0);
+}
+
+// ---------- EXPORTAR ----------
+
+function exportar(id){
+    let canvas=document.getElementById(id);
+    let link=document.createElement('a');
+    link.download=id+".png";
+    link.href=canvas.toDataURL();
+    link.click();
+}
+
+// ---------- PROCESAMIENTO ----------
+
+function procesar(s,c,a,canvas,res){
+
+    let mer1=s;
+    let mer2=s+c;
+    let eq=s+(c/2);
+
+    let transS=s+c;
+    let transC=-c;
+    let transA=a+90>180?a-90:a+90;
+
+    dibujar(canvas,s,c,a);
+
+    document.getElementById(res).innerHTML=`
+    <b>Tipo:</b> ${tipoAstigmatismo(c,a)}<br>
+    <b>Receta:</b> ${s.toFixed(2)} ${c.toFixed(2)} x ${a}°<br>
+    <b>Transposición:</b> ${transS.toFixed(2)} ${transC.toFixed(2)} x ${transA}°<br>
+    <b>Bicilíndrica:</b><br>
+    ${mer1.toFixed(2)} DC x ${a}°<br>
+    ${mer2.toFixed(2)} DC x ${transA}°<br>
+    <b>Equivalente esférico:</b> ${eq.toFixed(2)} D
+    `;
+}
+
+function calcular(){
+
+    let s_od=parseFloat(document.getElementById("s_od").value)||0;
+    let c_od=parseFloat(document.getElementById("c_od").value)||0;
+    let a_od=parseFloat(document.getElementById("a_od").value)||0;
+
+    let s_oi=parseFloat(document.getElementById("s_oi").value)||0;
+    let c_oi=parseFloat(document.getElementById("c_oi").value)||0;
+    let a_oi=parseFloat(document.getElementById("a_oi").value)||0;
+
+    procesar(s_od,c_od,a_od,"canvas_od","res_od");
+    procesar(s_oi,c_oi,a_oi,"canvas_oi","res_oi");
+}
+
+</script>
+</body>
+</html>
