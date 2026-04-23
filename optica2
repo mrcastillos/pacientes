@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Calculadora Optométrica PRO</title>
+
+<style>
+body{
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg,#eef2f7,#dbe6f6);
+    padding:20px;
+}
+
+.container{
+    max-width:1100px;
+    margin:auto;
+}
+
+.card{
+    background:white;
+    padding:20px;
+    border-radius:15px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.1);
+    margin-bottom:20px;
+}
+
+h2{
+    text-align:center;
+}
+
+select{
+    padding:6px;
+    margin:5px;
+}
+
+button{
+    padding:12px;
+    width:100%;
+    border:none;
+    background:#2d6cdf;
+    color:white;
+    border-radius:10px;
+    font-size:16px;
+    cursor:pointer;
+}
+
+.result{
+    display:flex;
+    justify-content:space-between;
+    gap:20px;
+}
+
+.eye{
+    width:48%;
+}
+
+canvas{
+    background: url('https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Protractor.svg/512px-Protractor.svg.png') center/contain no-repeat;
+    opacity:0.85;
+}
+
+.final{
+    text-align:center;
+    font-weight:bold;
+    font-size:18px;
+    padding:15px;
+    background:#eef4ff;
+    border-radius:10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="card">
+<h2>Calculadora Optométrica PRO</h2>
+
+<div>
+<h3>OD</h3>
+ESF: <select id="esf_od"></select>
+CYL: <select id="cyl_od"></select>
+EJE: <select id="axis_od"></select>
+
+<h3>OS</h3>
+ESF: <select id="esf_os"></select>
+CYL: <select id="cyl_os"></select>
+EJE: <select id="axis_os"></select>
+</div>
+
+<button onclick="calcular()">Calcular</button>
+</div>
+
+<div class="card result">
+
+<div class="eye">
+<h3>OD</h3>
+<div id="res_od"></div>
+<canvas id="canvas_od" width="250" height="250"></canvas>
+</div>
+
+<div class="eye">
+<h3>OS</h3>
+<div id="res_os"></div>
+<canvas id="canvas_os" width="250" height="250"></canvas>
+</div>
+
+</div>
+
+<div class="card final" id="diagnostico_final"></div>
+
+</div>
+
+<script>
+
+// generar opciones
+function llenarSelect(id, min, max, step){
+    let select = document.getElementById(id);
+    for(let i=min; i<=max; i+=step){
+        let opt = document.createElement("option");
+        opt.value = i.toFixed(2);
+        opt.text = i.toFixed(2);
+        select.add(opt);
+    }
+}
+
+llenarSelect("esf_od",-10,10,0.25);
+llenarSelect("cyl_od",-6,6,0.25);
+llenarSelect("axis_od",0,180,1);
+
+llenarSelect("esf_os",-10,10,0.25);
+llenarSelect("cyl_os",-6,6,0.25);
+llenarSelect("axis_os",0,180,1);
+
+
+// funciones clínicas
+function transponer(esf,cyl,axis){
+    let e = esf + cyl;
+    let c = -cyl;
+    let a = axis + 90;
+    if(a>180) a-=180;
+    return {e,c,a};
+}
+
+function eq(esf,cyl){
+    return esf + (cyl/2);
+}
+
+function diagnostico(esf,cyl){
+    cyl = Math.abs(cyl);
+
+    if(esf==0) return "Astigmatismo simple";
+    if(esf<0) return "Astigmatismo miópico compuesto";
+    if(esf>0 && esf==cyl) return "Hipermetrópico simple";
+    if(esf>0 && esf>cyl) return "Hipermetrópico compuesto";
+    if(esf>0 && esf<cyl) return "Astigmatismo mixto";
+}
+
+function ejeTipo(axis){
+    if(axis>=60 && axis<=120) return "A favor de la regla";
+    if(axis<=30 || axis>=150) return "En contra de la regla";
+    return "Oblicuo";
+}
+
+// dibujar cruz óptica
+function draw(canvasId, esf, cyl, axis){
+    let canvas = document.getElementById(canvasId);
+    let ctx = canvas.getContext("2d");
+
+    ctx.clearRect(0,0,250,250);
+
+    let cx = 125;
+    let cy = 125;
+
+    function line(angle,color,width){
+        let rad = angle*Math.PI/180;
+        ctx.beginPath();
+        ctx.moveTo(cx,cy);
+        ctx.lineTo(cx + 100*Math.cos(rad), cy - 100*Math.sin(rad));
+        ctx.strokeStyle=color;
+        ctx.lineWidth=width;
+        ctx.stroke();
+    }
+
+    // eje cilindro (rojo)
+    line(axis,"red",3);
+
+    // meridiano principal (azul)
+    line(axis+90,"blue",3);
+}
+
+// cálculo
+function calcular(){
+
+    let esf_od = parseFloat(esf_od.value);
+    let cyl_od = parseFloat(cyl_od.value);
+    let axis_od = parseFloat(axis_od.value);
+
+    let esf_os = parseFloat(esf_os.value);
+    let cyl_os = parseFloat(cyl_os.value);
+    let axis_os = parseFloat(axis_os.value);
+
+    let od_t = transponer(esf_od,cyl_od,axis_od);
+    let os_t = transponer(esf_os,cyl_os,axis_os);
+
+    document.getElementById("res_od").innerHTML = `
+    F2: ${od_t.e.toFixed(2)} = ${od_t.c.toFixed(2)} x ${od_t.a}°<br>
+    EE: ${eq(esf_od,cyl_od).toFixed(2)}<br>
+    Dx: ${diagnostico(esf_od,cyl_od)}<br>
+    Eje: ${ejeTipo(axis_od)}
+    `;
+
+    document.getElementById("res_os").innerHTML = `
+    F2: ${os_t.e.toFixed(2)} = ${os_t.c.toFixed(2)} x ${os_t.a}°<br>
+    EE: ${eq(esf_os,cyl_os).toFixed(2)}<br>
+    Dx: ${diagnostico(esf_os,cyl_os)}<br>
+    Eje: ${ejeTipo(axis_os)}
+    `;
+
+    draw("canvas_od",esf_od,cyl_od,axis_od);
+    draw("canvas_os",esf_os,cyl_os,axis_os);
+
+    document.getElementById("diagnostico_final").innerHTML =
+    `Diagnóstico Final: OD (${diagnostico(esf_od,cyl_od)}) y OS (${diagnostico(esf_os,cyl_os)})<br>
+    ${ejeTipo(axis_od)} en OD y ${ejeTipo(axis_os)} en OS`;
+}
+
+</script>
+
+</body>
+</html>
