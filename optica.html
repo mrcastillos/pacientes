@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Calculadora Optométrica</title>
+<style>
+body { font-family: Arial; padding: 20px; background:#f4f6f8;}
+input { width:80px; margin:5px;}
+button { padding:10px; margin-top:10px;}
+.result { background:#fff; padding:15px; margin-top:20px; border-radius:10px;}
+h2 { color:#333;}
+</style>
+</head>
+
+<body>
+
+<h2>Calculadora Optométrica</h2>
+
+<h3>Ingrese Fórmula 1 (Cilindro Negativo)</h3>
+
+<h4>OD</h4>
+ESF: <input id="esf_od" type="number" step="0.25">
+CYL: <input id="cyl_od" type="number" step="0.25">
+EJE: <input id="axis_od" type="number">
+
+<h4>OS</h4>
+ESF: <input id="esf_os" type="number" step="0.25">
+CYL: <input id="cyl_os" type="number" step="0.25">
+EJE: <input id="axis_os" type="number">
+
+<br>
+<button onclick="calcular()">Calcular</button>
+
+<div class="result" id="resultado"></div>
+
+<script>
+
+function transponer(esf, cyl, eje){
+    let newEsf = esf + cyl;
+    let newCyl = -cyl;
+    let newAxis = eje + 90;
+    if(newAxis > 180) newAxis -= 180;
+
+    return {esf:newEsf, cyl:newCyl, axis:newAxis};
+}
+
+function equivalenteEsferico(esf, cyl){
+    return esf + (cyl/2);
+}
+
+function clasificarAstigmatismo(esf, cyl){
+    cyl = Math.abs(cyl);
+
+    if(esf == 0) return "Astigmatismo simple";
+    if(esf < 0) return "Astigmatismo miópico compuesto";
+    if(esf > 0 && esf == cyl) return "Astigmatismo hipermetrópico simple";
+    if(esf > 0 && esf > cyl) return "Astigmatismo hipermetrópico compuesto";
+    if(esf > 0 && esf < cyl) return "Astigmatismo mixto";
+
+    return "Indeterminado";
+}
+
+function clasificarEje(axis){
+    if((axis >= 60 && axis <= 120)) return "A favor de la regla";
+    if((axis >= 0 && axis <= 30) || (axis >=150 && axis <=180)) return "En contra de la regla";
+    if((axis >30 && axis <60) || (axis >120 && axis <150)) return "Oblicuo";
+}
+
+function bicilindrica(esf, cyl, axis){
+    let meridiano1 = esf;
+    let meridiano2 = esf + cyl;
+    let eje2 = axis + 90;
+    if(eje2 > 180) eje2 -=180;
+
+    return {
+        m1: meridiano1,
+        eje1: eje2,
+        m2: meridiano2,
+        eje2: axis
+    }
+}
+
+function curvaBase(esf, cyl){
+    return (esf + (cyl/2)) + 6; // aproximación clínica
+}
+
+function calcular(){
+
+    let esf_od = parseFloat(document.getElementById("esf_od").value);
+    let cyl_od = parseFloat(document.getElementById("cyl_od").value);
+    let axis_od = parseFloat(document.getElementById("axis_od").value);
+
+    let esf_os = parseFloat(document.getElementById("esf_os").value);
+    let cyl_os = parseFloat(document.getElementById("cyl_os").value);
+    let axis_os = parseFloat(document.getElementById("axis_os").value);
+
+    let od_t = transponer(esf_od, cyl_od, axis_od);
+    let os_t = transponer(esf_os, cyl_os, axis_os);
+
+    let od_bi = bicilindrica(esf_od, cyl_od, axis_od);
+    let os_bi = bicilindrica(esf_os, cyl_os, axis_os);
+
+    let resultado = `
+    <h3>RESULTADOS</h3>
+
+    <h4>OD</h4>
+    Formula 2: ${od_t.esf.toFixed(2)} = ${od_t.cyl.toFixed(2)} x ${od_t.axis}°<br>
+    Formula 3: ${od_bi.m1.toFixed(2)} x ${od_bi.eje1}° / ${od_bi.m2.toFixed(2)} x ${od_bi.eje2}°<br>
+    Equivalente esférico: ${equivalenteEsferico(esf_od,cyl_od).toFixed(2)}<br>
+    Curva base: ${curvaBase(esf_od,cyl_od).toFixed(2)}<br>
+    Diagnóstico: ${clasificarAstigmatismo(esf_od,cyl_od)}<br>
+    Eje: ${clasificarEje(axis_od)}<br>
+    Cruz óptica: ${esf_od.toFixed(2)} / ${(esf_od + cyl_od).toFixed(2)}<br>
+
+    <h4>OS</h4>
+    Formula 2: ${os_t.esf.toFixed(2)} = ${os_t.cyl.toFixed(2)} x ${os_t.axis}°<br>
+    Formula 3: ${os_bi.m1.toFixed(2)} x ${os_bi.eje1}° / ${os_bi.m2.toFixed(2)} x ${os_bi.eje2}°<br>
+    Equivalente esférico: ${equivalenteEsferico(esf_os,cyl_os).toFixed(2)}<br>
+    Curva base: ${curvaBase(esf_os,cyl_os).toFixed(2)}<br>
+    Diagnóstico: ${clasificarAstigmatismo(esf_os,cyl_os)}<br>
+    Eje: ${clasificarEje(axis_os)}<br>
+    Cruz óptica: ${esf_os.toFixed(2)} / ${(esf_os + cyl_os).toFixed(2)}<br>
+    `;
+
+    document.getElementById("resultado").innerHTML = resultado;
+}
+
+</script>
+
+</body>
+</html>
